@@ -108,7 +108,7 @@
                             <property name="action-target">'thunderbolt'</property>
                           </object>
                         </child>
-
+<!--
                         <child>
                           <object class="CcListRow">
                             <property name="title" translatable="yes">Device _Security</property>
@@ -122,7 +122,7 @@
                             </binding>
                           </object>
                         </child>
-
+-->
                       </object>
                     </child>
                   </object>
