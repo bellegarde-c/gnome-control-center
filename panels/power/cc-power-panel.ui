@@ -193,6 +193,14 @@
                     <property name="use_underline">True</property>
                   </object>
                 </child>
+                <child>
+                  <object class="AdwSwitchRow" id="battery_bim_row">
+                    <property name="visible">False</property>
+                    <property name="title" translatable="yes">Charging control</property>
+                    <property name="subtitle" translatable="yes">Automatically determine when to start charging based on alarms set. You need Clocks from flathub for this to work (until Droidian package is updated).</property>
+                    <property name="use_underline">True</property>
+                  </object>
+                </child>
               </object>
             </child>
           </object>
