@@ -115,6 +115,7 @@
                       <object class="AdwSwitchRow" id="auto_login_row">
                         <property name="title" translatable="yes">A_utomatic Login</property>
                         <property name="use-underline">True</property>
+                        <property name="visible">False</property>
                         <property name="sensitive" bind-source="CcUserPage" bind-property="locked" bind-flags="invert-boolean"/>
                         <property name="has-tooltip" bind-source="CcUserPage" bind-property="locked" bind-flags="sync-create"/>
                         <property name="tooltip-text" translatable="yes">Unlock to Change This Setting</property>
@@ -127,6 +128,7 @@
 
                 <child>
                   <object class="AdwPreferencesGroup" id="account_settings_box">
+                    <property name="visible">False</property>
                     <child>
                       <object class="CcListRow" id="account_type_row">
                         <property name="sensitive" bind-source="CcUserPage" bind-property="editable" bind-flags="sync-create"/>
@@ -152,7 +154,7 @@
 
                     <child>
                       <object class="CcListRow" id="parental_controls_row">
-                        <property name="visible" bind-source="CcUserPage" bind-property="is-admin" bind-flags="invert-boolean|sync-create"/>
+                        <property name="visible">False</property>
                         <property name="title" translatable="yes">_Parental Controls</property>
                         <property name="subtitle" translatable="yes">Open the Parental Controls app</property>
                         <property name="subtitle-lines">0</property>
@@ -164,6 +166,7 @@
 
                     <child>
                       <object class="CcListRow" id="language_row">
+                        <property name="visible">False</property>
                         <property name="sensitive" bind-source="CcUserPage" bind-property="editable" bind-flags="sync-create"/>
                         <property name="has-tooltip" bind-source="CcUserPage" bind-property="editable" bind-flags="invert-boolean"/>
                         <property name="tooltip-text" translatable="yes">Unlock to Change This Setting</property>
@@ -186,7 +189,7 @@
 
                         <child>
                           <object class="GtkButton" id="remove_user_button">
-                            <property name="visible" bind-source="CcUserPage" bind-property="is-current-user" bind-flags="invert-boolean"/>
+                            <property name="visible">False</property>
                             <property name="sensitive" bind-source="CcUserPage" bind-property="editable" bind-flags="sync-create"/>
                             <property name="label" translatable="yes">_Remove User</property>
                             <property name="use-underline">True</property>

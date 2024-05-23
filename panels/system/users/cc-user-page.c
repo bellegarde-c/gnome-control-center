@@ -750,7 +750,6 @@ cc_user_page_set_user (CcUserPage  *self,
 #endif
 
     g_signal_handlers_block_by_func (self->auto_login_row, autologin_changed, self);
-    gtk_widget_set_visible (GTK_WIDGET (self->auto_login_row), get_autologin_possible (user));
     adw_switch_row_set_active (self->auto_login_row, act_user_get_automatic_login (user));
     g_signal_handlers_unblock_by_func (self->auto_login_row, autologin_changed, self);
 
