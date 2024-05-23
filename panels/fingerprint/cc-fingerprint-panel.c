@@ -106,11 +106,11 @@ refresh_unenrolled_list(CcFingerprintPanel *self) {
 
     gtk_combo_box_text_remove_all(self->finger_select_combo);
 
-    for (int i = 0; fingers[i] != NULL; i++) {
-        if (!g_strv_contains(fpd_fingers, fingers[i])) {
-            gtk_combo_box_text_append_text(self->finger_select_combo, fingers[i]);
-        }
-    }
+    /* for (int i = 0; fingers[i] != NULL; i++) { */
+    /*     if (!g_strv_contains(fpd_fingers, fingers[i])) { */
+    /*         gtk_combo_box_text_append_text(self->finger_select_combo, fingers[i]); */
+    /*     } */
+    /* } */
 
     g_strfreev(fpd_fingers);
     g_free(fpd_output);
