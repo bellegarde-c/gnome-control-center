@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="DdFingerprintDialog" parent="GtkWindow">
+    <style>
+      <class name="fingerprint" />
+    </style>
+    <property name="name">fingerprint-dialog</property>
+    <property name="title" translatable="yes">Fingerprint Manager</property>
+    <property name="destroy-with-parent">True</property>
+    <property name="modal">True</property>
+    <property name="hide-on-close">True</property>
+    <child type="titlebar">
+      <object class="AdwHeaderBar" id="titlebar">
+        <property name="show-end-title-buttons">True</property>
+        <property name="show-start-title-buttons">True</property>
+        <child type="title">
+          <object class="GtkLabel" id="title">
+            <property name="label" translatable="yes">Fingerprint</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkImage">
+            <property name="vexpand">True</property>
+            <property name="hexpand">True</property>
+            <property name="icon_name">fingerprint-detection-symbolic</property>
+            <property name="pixel_size">192</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

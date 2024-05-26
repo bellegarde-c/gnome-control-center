@@ -31,8 +31,7 @@
 
 #include "cc-user-page.h"
 #include "cc-avatar-chooser.h"
-#include "cc-fingerprint-dialog.h"
-#include "cc-fingerprint-manager.h"
+#include "dd-fingerprint-dialog.h"
 #include "cc-language-chooser.h"
 #include "cc-list-row.h"
 #include "cc-password-dialog.h"
@@ -79,7 +78,6 @@ struct _CcUserPage {
     ActUser              *user;
     GSettings            *login_screen_settings;
     GPermission          *permission;
-    CcFingerprintManager *fingerprint_manager;
 
     gboolean              locked;
     gboolean              editable;
@@ -350,41 +348,11 @@ autologin_changed (CcUserPage *self)
 }
 
 static void
-update_fingerprint_row_state (CcUserPage           *self,
-                              GParamSpec           *spec,
-                              CcFingerprintManager *manager)
-{
-    CcFingerprintState state = cc_fingerprint_manager_get_state (manager);
-    gboolean visible = FALSE;
-
-    visible = (act_user_get_uid (self->user) == getuid () &&
-               act_user_is_local_account (self->user) &&
-               (self->login_screen_settings &&
-                g_settings_get_boolean (self->login_screen_settings,
-                                        "enable-fingerprint-authentication")));
-    gtk_widget_set_visible (GTK_WIDGET (self->fingerprint_row), visible);
-    if (!visible)
-        return;
-
-    if (state != CC_FINGERPRINT_STATE_UPDATING)
-        gtk_widget_set_visible (GTK_WIDGET (self->fingerprint_row),
-                                state != CC_FINGERPRINT_STATE_NONE);
-
-    gtk_widget_set_sensitive (GTK_WIDGET (self->fingerprint_row),
-                              state != CC_FINGERPRINT_STATE_UPDATING);
-
-    if (state == CC_FINGERPRINT_STATE_ENABLED)
-        cc_list_row_set_secondary_label (self->fingerprint_row, _("Enabled"));
-    else if (state == CC_FINGERPRINT_STATE_DISABLED)
-        cc_list_row_set_secondary_label (self->fingerprint_row, _("Disabled"));
-}
-
-static void
 change_fingerprint (CcUserPage *self)
 {
-    CcFingerprintDialog *dialog;
+    DdFingerprintDialog *dialog;
 
-    dialog = cc_fingerprint_dialog_new (self->fingerprint_manager);
+    dialog = dd_fingerprint_dialog_new ();
     gtk_window_set_transient_for (GTK_WINDOW (dialog),
                                   GTK_WINDOW (gtk_widget_get_native (GTK_WIDGET (self))));
     gtk_window_present (GTK_WINDOW (dialog));
@@ -757,16 +725,6 @@ cc_user_page_set_user (CcUserPage  *self,
     cc_list_row_set_secondary_label (self->password_row, get_password_mode_text (user));
     user_language = get_user_language (user);
     cc_list_row_set_secondary_label (self->language_row, user_language);
-
-    if (!self->fingerprint_manager) {
-        self->fingerprint_manager = cc_fingerprint_manager_new (user);
-        g_signal_connect_object (self->fingerprint_manager,
-                                 "notify::state",
-                                 G_CALLBACK (update_fingerprint_row_state),
-                                 self,
-                                 G_CONNECT_SWAPPED);
-        update_fingerprint_row_state (self, NULL, self->fingerprint_manager);
-    }
 
     cc_permission_infobar_set_permission (self->permission_infobar, permission);
     cc_permission_infobar_set_title (self->permission_infobar, _("Some settings are locked"));

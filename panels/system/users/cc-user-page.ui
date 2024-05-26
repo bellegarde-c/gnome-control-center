@@ -100,10 +100,8 @@
                     </child>
                     <child>
                       <object class="CcListRow" id="fingerprint_row">
-                        <property name="sensitive" bind-source="CcUserPage" bind-property="editable" bind-flags="sync-create"/>
-                        <property name="has-tooltip" bind-source="CcUserPage" bind-property="editable" bind-flags="invert-boolean"/>
                         <property name="tooltip-text" translatable="yes">Unlock to Change This Setting</property>
-                        <property name="visible">False</property>
+                        <property name="visible">True</property>
                         <property name="title" translatable="yes">_Fingerprint Login</property>
                         <property name="use_underline">True</property>
                         <property name="activatable">True</property>
