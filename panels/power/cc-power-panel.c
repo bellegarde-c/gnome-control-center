@@ -41,6 +41,10 @@ struct _CcPowerPanel
   CcPanel            parent_instance;
 
   AdwSwitchRow      *als_row;
+  AdwActionRow      *als_row_light;
+  AdwActionRow      *als_row_medium;
+  AdwActionRow      *als_row_high;
+  AdwActionRow      *als_row_device;
   GtkWindow         *automatic_suspend_dialog;
   CcListRow         *automatic_suspend_row;
   GtkListBox        *battery_listbox;
@@ -98,6 +102,35 @@ enum
 {
   ACTION_MODEL_TEXT,
   ACTION_MODEL_VALUE
+};
+
+/* We used python to get values as bytes:
+from gi.repository import GLib
+variant = GLib.Variant("a{ii}", { 1: 2, ...})
+bytes = variant.get_data_as_bytes()
+print("static const uint8_t x[] = {{\n{}\n}};".format(", ".join([format(b, '#04x') for b in bytes.get_data()])))
+*/
+/* {1:1,1000:3,2000:9,3000:20,4000:40,5000:65,6000:100} */
+static const uint8_t LOW_BRIGHTNESS[] = {
+  0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe8, 0x03, 0x00, 0x00,
+  0x03, 0x00, 0x00, 0x00, 0xd0, 0x07, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00,
+  0xb8, 0x0b, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0xa0, 0x0f, 0x00, 0x00,
+  0x28, 0x00, 0x00, 0x00, 0x88, 0x13, 0x00, 0x00, 0x41, 0x00, 0x00, 0x00,
+  0x70, 0x17, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00
+};
+/* {1:1,1000:6,2000:18,3000:40,3500:65,4000:100} */
+static const uint8_t MEDIUM_BRIGHTNESS[] = {
+  0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe8, 0x03, 0x00, 0x00,
+  0x06, 0x00, 0x00, 0x00, 0xd0, 0x07, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00,
+  0xb8, 0x0b, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0xac, 0x0d, 0x00, 0x00,
+  0x41, 0x00, 0x00, 0x00, 0xa0, 0x0f, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00
+};
+/* {1:1,1000:12,2000:36,2500:62,3000:100} */
+static const uint8_t HIGH_BRIGHTNESS[] = {
+  0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe8, 0x03, 0x00, 0x00,
+  0x0c, 0x00, 0x00, 0x00, 0xd0, 0x07, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00,
+  0xc4, 0x09, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x00, 0xb8, 0x0b, 0x00, 0x00,
+  0x64, 0x00, 0x00, 0x00
 };
 
 static const char *
@@ -305,15 +338,6 @@ up_client_device_added (CcPowerPanel *self,
 }
 
 static void
-als_row_changed_cb (CcPowerPanel *self)
-{
-  gboolean enabled;
-  enabled = adw_switch_row_get_active (self->als_row);
-  g_debug ("Setting ALS enabled %s", enabled ? "on" : "off");
-  g_settings_set_boolean (self->gsd_settings, "ambient-enabled", enabled);
-}
-
-static void
 als_enabled_state_changed (CcPowerPanel *self)
 {
   gboolean enabled;
@@ -331,10 +355,7 @@ als_enabled_state_changed (CcPowerPanel *self)
 
   enabled = g_settings_get_boolean (self->gsd_settings, "ambient-enabled");
   g_debug ("ALS enabled: %s", enabled ? "on" : "off");
-  g_signal_handlers_block_by_func (self->als_row, als_row_changed_cb, self);
-  adw_switch_row_set_active (self->als_row, enabled);
   gtk_widget_set_visible (GTK_WIDGET (self->als_row), visible && self->has_brightness);
-  g_signal_handlers_unblock_by_func (self->als_row, als_row_changed_cb, self);
 }
 
 static void
@@ -454,6 +475,28 @@ set_value_for_combo_row (AdwComboRow *combo_row, gint value)
   adw_combo_row_set_selected (combo_row, insert_before);
 }
 
+static GVariant*
+get_variant_from_uint8_array (const uint8_t points[], gsize size)
+{
+  GVariant *value = NULL;
+  g_autoptr (GVariantType) type = NULL;
+  g_autoptr (GBytes) bytes = NULL;
+
+  bytes = g_bytes_new (points, size);
+  type = g_variant_type_new ("a{ii}");
+  value = g_variant_new_from_bytes (type, bytes, TRUE);
+
+  return g_variant_ref (value);
+}
+
+static void
+set_brightness_value (CcPowerPanel *self, const uint8_t points[], gsize size)
+{
+  g_settings_set_value (self->gsd_settings,
+                        "ambient-brightness-points",
+                        get_variant_from_uint8_array (points, size));
+}
+
 static void
 set_ac_battery_ui_mode (CcPowerPanel *self)
 {
@@ -519,6 +562,27 @@ blank_screen_row_changed_cb (CcPowerPanel *self)
   value = GPOINTER_TO_UINT (g_object_get_data (item, "value"));
 
   g_settings_set_uint (self->session_settings, "idle-delay", value);
+}
+
+static void
+als_radio_activated_cb (CcPowerPanel *self,
+                        gpointer      user_data)
+{
+  AdwActionRow *row = ADW_ACTION_ROW (user_data);
+
+  if (row == self->als_row_light) {
+    set_brightness_value (self, LOW_BRIGHTNESS, sizeof (LOW_BRIGHTNESS));
+  } else if (row == self->als_row_medium) {
+    set_brightness_value (self, MEDIUM_BRIGHTNESS, sizeof (MEDIUM_BRIGHTNESS));
+  } else if (row == self->als_row_high) {
+    set_brightness_value (self, HIGH_BRIGHTNESS, sizeof (HIGH_BRIGHTNESS));
+  } else {
+    g_settings_set_value (self->gsd_settings,
+                          "ambient-brightness-points",
+                          g_settings_get_default_value (
+                                                self->gsd_settings,
+                                                "ambient-brightness-points"));
+  }
 }
 
 static void
@@ -1378,6 +1442,48 @@ setup_general_section (CcPowerPanel *self)
   gtk_widget_set_visible (GTK_WIDGET (self->general_section), show_section);
 }
 
+static void
+setup_ambient_radio (CcPowerPanel *self)
+{
+  const uint8_t* br[] = {
+    LOW_BRIGHTNESS,
+    MEDIUM_BRIGHTNESS,
+    HIGH_BRIGHTNESS
+  };
+  AdwActionRow* wg[] = {
+    self->als_row_light,
+    self->als_row_medium,
+    self->als_row_high
+  };
+  unsigned int length = sizeof (br) / sizeof (br[0]);
+  GVariant *setting = g_settings_get_value (self->gsd_settings,
+                                            "ambient-brightness-points");
+  GVariant *value;
+
+  value = g_settings_get_default_value (self->gsd_settings,
+                                        "ambient-brightness-points");
+  gtk_widget_set_visible (GTK_WIDGET (self->als_row_device),
+                          g_variant_get_size (value) > 1);
+  g_variant_unref (value);
+
+  for (int i = 0; i < length; i++) {
+    unsigned int variant_length = sizeof (br[i]) /(sizeof (br[i][0]) * 2);
+
+    value = get_variant_from_uint8_array (br[i],
+                                          sizeof (br[i]) * variant_length);
+
+    if (g_variant_equal (value, setting)) {
+      adw_action_row_activate (wg[i]);
+      g_variant_unref (value);
+      return;
+    }
+
+    g_variant_unref (value);
+  }
+
+  adw_action_row_activate (self->als_row_device);
+}
+
 static gint
 battery_sort_func (GtkListBoxRow *a, GtkListBoxRow *b, gpointer data)
 {
@@ -1441,6 +1547,10 @@ cc_power_panel_class_init (CcPowerPanelClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/control-center/power/cc-power-panel.ui");
 
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, als_row);
+  gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, als_row_light);
+  gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, als_row_medium);
+  gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, als_row_high);
+  gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, als_row_device);
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, automatic_suspend_dialog);
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, automatic_suspend_row);
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, battery_listbox);
@@ -1469,7 +1579,7 @@ cc_power_panel_class_init (CcPowerPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, suspend_on_ac_delay_combo);
   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, suspend_on_ac_switch_row);
 
-  gtk_widget_class_bind_template_callback (widget_class, als_row_changed_cb);
+  gtk_widget_class_bind_template_callback (widget_class, als_radio_activated_cb);
   gtk_widget_class_bind_template_callback (widget_class, blank_screen_row_changed_cb);
   gtk_widget_class_bind_template_callback (widget_class, power_saver_radio_activated_cb);
   gtk_widget_class_bind_template_callback (widget_class, keynav_failed_cb);
@@ -1533,6 +1643,13 @@ cc_power_panel_init (CcPowerPanel *self)
                      self->power_saver_radio_row, "enable-expansion",
                      G_SETTINGS_BIND_DEFAULT);
   }
+
+
+
+  g_settings_bind (self->gsd_settings, "ambient-enabled",
+                   self->als_row, "enable-expansion",
+                   G_SETTINGS_BIND_DEFAULT);
+  setup_ambient_radio (self);
 
   setup_general_section (self);
 
