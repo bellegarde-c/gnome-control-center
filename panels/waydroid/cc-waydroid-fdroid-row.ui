@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <template class="CcFdroidRow" parent="AdwExpanderRow">
+    <property name="title" translatable="yes">F-Droid application store</property>
+    <child type="prefix">
+      <object class="GtkImage" id="icon">
+        <property name="pixel-size">48</property>
+        <property name="icon-name">package-x-generic-symbolic</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
+      </object>
+    </child>
+    <child>
+      <object class="AdwActionRow" id="install_row">
+        <property name="margin-start">10</property>
+        <property name="title" translatable="yes">Install F-Droid</property>
+        <child type="suffix">
+          <object class="GtkBox">
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkSpinner" id="spinner"></object>
+            </child>
+            <child>
+              <object class="GtkButton" id="install_application_button">
+                <property name="valign">center</property>
+                <property name="label">Install</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
+                <signal name="clicked" handler="install_application_clicked_cb" swapped="yes"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

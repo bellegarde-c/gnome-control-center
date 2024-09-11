@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <template class="CcAppRow" parent="AdwExpanderRow">
+    <child type="prefix">
+      <object class="GtkImage" id="icon">
+        <property name="pixel-size">48</property>
+        <property name="margin-top">5</property>
+        <property name="margin-bottom">5</property>
+      </object>
+    </child>
+    <child>
+      <object class="AdwActionRow" id="show_in_launcher_row">
+        <property name="margin-start">10</property>
+        <property name="title" translatable="yes">Show in launcher</property>
+        <property name="activatable_widget">show_in_launcher_switch</property>
+        <child type="suffix">
+          <object class="GtkSwitch" id="show_in_launcher_switch">
+            <property name="valign">center</property>
+            <property name="active">True</property>
+            <signal name="notify::active" handler="show_in_launcher_active_cb" swapped="yes"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwActionRow" id="remove_row">
+        <property name="margin-start">10</property>
+        <property name="title" translatable="yes">Remove application</property>
+        <child type="suffix">
+          <object class="GtkButton" id="remove_application_button">
+            <property name="valign">center</property>
+            <property name="label">Uninstall</property>
+            <style>
+              <class name="destructive-action"/>
+            </style>
+            <signal name="clicked" handler="remove_application_clicked_cb" swapped="yes"/>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
