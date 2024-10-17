@@ -942,7 +942,7 @@ static void
 setting_notifications_active_cb (CcWaydroidPanel *self)
 {
   gboolean active = gtk_switch_get_active (GTK_SWITCH (self->setting_notifications_switch));
-
+g_warning("%b", active);
   if (active)
     unmask_notifications_service (self);
   else
