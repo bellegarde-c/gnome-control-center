@@ -1128,7 +1128,7 @@ cc_waydroid_panel_finalize (GObject *object)
   g_list_free_full (self->installed_applications, g_free);
 
   g_cancellable_cancel (self->cancellable);
-  g_free (self->cancellable);
+  g_object_unref (self->cancellable);
 
   G_OBJECT_CLASS (cc_waydroid_panel_parent_class)->finalize (object);
 }
