@@ -693,7 +693,7 @@ set_shared_folder_state (CcWaydroidPanel *self)
   g_signal_handlers_block_by_func(self->setting_shared_folder_switch,
                                   setting_shared_folder_active_cb,
                                   self);
-  gtk_switch_set_active (GTK_SWITCH (self->setting_shared_folder_switch), !active);
+  gtk_switch_set_active (GTK_SWITCH (self->setting_shared_folder_switch), active);
   g_signal_handlers_unblock_by_func(self->setting_shared_folder_switch,
                                     setting_shared_folder_active_cb,
                                     self);
@@ -713,7 +713,7 @@ set_notifications_state (CcWaydroidPanel *self)
   g_signal_handlers_block_by_func(self->setting_notifications_switch,
                                   setting_notifications_active_cb,
                                   self);
-  gtk_switch_set_active (GTK_SWITCH (self->setting_notifications_switch), active);
+  gtk_switch_set_active (GTK_SWITCH (self->setting_notifications_switch), !active);
   g_signal_handlers_unblock_by_func(self->setting_notifications_switch,
                                     setting_notifications_active_cb,
                                     self);
