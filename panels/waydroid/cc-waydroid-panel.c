@@ -705,16 +705,16 @@ set_notifications_state (CcWaydroidPanel *self)
   g_autofree char *filename = g_build_filename (g_get_user_config_dir (),
                                                 "systemd",
                                                 "user",
-                                                "waydroid-notification_client.service",
+                                                "waydroid-notification-client.service",
                                                 NULL);
   g_autoptr (GFile) file = g_file_new_for_path (filename);
-  gboolean active = g_file_query_exists (file, self->cancellable);
+  gboolean exists = g_file_query_exists (file, self->cancellable);
 
-  g_warning (">>> %b", active);
+  g_warning (">>> %b", exists);
   g_signal_handlers_block_by_func(self->setting_notifications_switch,
                                   setting_notifications_active_cb,
                                   self);
-  gtk_switch_set_active (GTK_SWITCH (self->setting_notifications_switch), !active);
+  gtk_switch_set_active (GTK_SWITCH (self->setting_notifications_switch), !exists);
   g_signal_handlers_unblock_by_func(self->setting_notifications_switch,
                                     setting_notifications_active_cb,
                                     self);
