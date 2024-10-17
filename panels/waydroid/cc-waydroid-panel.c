@@ -129,14 +129,13 @@ disable_shared_folder (CcWaydroidPanel *self)
 static void
 mask_notifications_service (CcWaydroidPanel *self)
 {
-  const char *action = mask ? "DisableUnitFiles" : "EnableUnitFiles";
   GVariantBuilder builder;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
   g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
-                     action,
+                     "EnableUnitFiles",
                      g_variant_new ("(asbb)", &builder, FALSE, TRUE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
@@ -148,14 +147,13 @@ mask_notifications_service (CcWaydroidPanel *self)
 static void
 unmask_notifications_service (CcWaydroidPanel *self)
 {
-  const char *action = mask ? "DisableUnitFiles" : "EnableUnitFiles";
   GVariantBuilder builder;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
   g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
-                     action,
+                     "DisableUnitFiles",
                      g_variant_new ("(asb)", &builder, TRUE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
