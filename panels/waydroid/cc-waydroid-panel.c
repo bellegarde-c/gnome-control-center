@@ -120,7 +120,7 @@ reload_service (gpointer user_data)
 
   g_dbus_proxy_call (mask_service_params->self->systemd_proxy,
                      "Reload",
-                     g_variant_new ("(&s&s)", service, "replace"),
+                     NULL,
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      mask_service_params->self->cancellable,
