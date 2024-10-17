@@ -153,7 +153,7 @@ unmask_notifications_service (CcWaydroidPanel *self)
   g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
-                     "UnmaskUnitFiles",
+                     "UnmaskUnitFies",
                      g_variant_new ("(asb)", &builder, TRUE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
@@ -942,7 +942,7 @@ static void
 setting_notifications_active_cb (CcWaydroidPanel *self)
 {
   gboolean active = gtk_switch_get_active (GTK_SWITCH (self->setting_notifications_switch));
-g_warning("%b", active);
+
   if (active)
     unmask_notifications_service (self);
   else
