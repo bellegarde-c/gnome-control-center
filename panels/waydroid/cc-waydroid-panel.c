@@ -234,7 +234,7 @@ add_applications (gpointer user_data)
 
   add_application (first->data, data->self);
 
-  data->applications = g_list_remove (data->applications, first);
+  data->applications = g_list_remove_link (data->applications, first);
 
   g_warning (">>>> %d", g_list_length (data->applications));
   if (g_list_length (data->applications) == 0) {
