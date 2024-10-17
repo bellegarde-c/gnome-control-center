@@ -452,8 +452,12 @@ installed_apps_cb (GPid     pid,
                    gpointer user_data)
 {
   CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
-  GList *installed_rows = get_installed_rows (self);
+  GList *installed_rows = NULL;
   GtkWidget *row;
+
+  g_return_if_fail (self->cancellable != NULL);
+
+  installed_rows = get_installed_rows (self);
 
   GFOREACH (self->application_rows, row) {
     gboolean installed = g_list_find (installed_rows, row) != NULL;
@@ -473,8 +477,10 @@ handle_application_list (GIOChannel   *source,
   g_autofree char *line = NULL;
   gsize  size;
 
-  if (g_io_channel_read_line (source, &line, &size, NULL, NULL) != G_IO_STATUS_NORMAL)
-    return FALSE;
+  g_return_val_if_fail (self->cancellable != NULL, FALSE);
+
+  g_return_val_if_fail (g_io_channel_read_line (source, &line, &size, NULL, NULL) == G_IO_STATUS_NORMAL,
+                        FALSE);
 
   if (g_strrstr (line, "packageName: ") != NULL) {
     GString *package = g_string_new (line);
