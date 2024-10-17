@@ -710,7 +710,6 @@ set_notifications_state (CcWaydroidPanel *self)
   g_autoptr (GFile) file = g_file_new_for_path (filename);
   gboolean exists = g_file_query_exists (file, self->cancellable);
 
-  g_warning (">>> %b", exists);
   g_signal_handlers_block_by_func(self->setting_notifications_switch,
                                   setting_notifications_active_cb,
                                   self);
@@ -1127,6 +1126,9 @@ cc_waydroid_panel_finalize (GObject *object)
 
   g_list_free (self->application_rows);
   g_list_free_full (self->installed_applications, g_free);
+
+  g_cancellable_cancel (self->cancellable);
+  g_free (self->cancellable);
 
   G_OBJECT_CLASS (cc_waydroid_panel_parent_class)->finalize (object);
 }

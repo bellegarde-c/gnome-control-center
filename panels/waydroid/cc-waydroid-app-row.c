@@ -362,6 +362,7 @@ cc_app_row_finalize (GObject *object)
   g_clear_pointer (&self->apk_file, g_free);
 
   g_cancellable_cancel (self->cancellable);
+  g_free (self->cancellable);
 
   G_OBJECT_CLASS (cc_app_row_parent_class)->finalize (object);
 }
