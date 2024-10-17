@@ -710,6 +710,7 @@ set_notifications_state (CcWaydroidPanel *self)
   g_autoptr (GFile) file = g_file_new_for_path (filename);
   gboolean active = g_file_query_exists (file, self->cancellable);
 
+  g_warning (">>> %b", active);
   g_signal_handlers_block_by_func(self->setting_notifications_switch,
                                   setting_notifications_active_cb,
                                   self);
