@@ -118,12 +118,12 @@ reload_service (gpointer user_data)
 {
   struct MaskServiceParams *mask_service_params = user_data;
 
-  g_dbus_proxy_call (self->systemd_proxy,
+  g_dbus_proxy_call (mask_service_params->self->systemd_proxy,
                      "Reload",
                      g_variant_new ("(&s&s)", service, "replace"),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
-                     self->cancellable,
+                     mask_service_params->self->cancellable,
                      reload_service_cb,
                      user_data);
 }
@@ -175,7 +175,7 @@ mask_notifications_service (CcWaydroidPanel *self,
   g_dbus_proxy_call (self->systemd_proxy,
                      mask_service_params->action,
                      mask ? g_variant_new ("(asbb)", &builder, FALSE, FALSE) :
-                            g_variant_new ("(asb)", &builder, FALSE) :
+                            g_variant_new ("(asb)", &builder, FALSE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
