@@ -232,17 +232,22 @@ add_applications (gpointer user_data)
   struct ApplicationsData *data = user_data;
   GList *first = g_list_first (data->applications);
 
+  if (data->self->cancellable != NULL) {
+    goto out;
+  }
+
   add_application (first->data, data->self);
 
   data->applications = g_list_remove_link (data->applications, first);
 
-  if (g_list_length (data->applications) == 0 || g_cancellable_is_cancelled (data->self->cancellable)) {
-      g_list_free_full (data->applications, g_object_unref);
-      g_free (data);
-  } else {
+  if (g_list_length (data->applications) != 0 && !g_cancellable_is_cancelled (data->self->cancellable)) {
     g_idle_add ((GSourceFunc) add_applications, data);
+    return;
   }
 
+out:
+  g_list_free_full (data->applications, g_object_unref);
+  g_free (data);
   return FALSE;
 }
 
@@ -1162,7 +1167,7 @@ cc_waydroid_panel_finalize (GObject *object)
   g_list_free_full (self->installed_applications, g_free);
 
   g_cancellable_cancel (self->cancellable);
-  g_object_unref (self->cancellable);
+  g_clear_object (&self->cancellable);
 
   G_OBJECT_CLASS (cc_waydroid_panel_parent_class)->finalize (object);
 }
