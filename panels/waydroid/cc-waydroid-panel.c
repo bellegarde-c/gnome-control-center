@@ -136,7 +136,7 @@ mask_notifications_service (CcWaydroidPanel *self)
 
   g_dbus_proxy_call (self->systemd_proxy,
                      "MaskUnitFiles",
-                     g_variant_new ("(asbb)", &builder, TRUE, TRUE),
+                     g_variant_new ("(asbb)", &builder, FALSE, FALSE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
@@ -153,8 +153,8 @@ unmask_notifications_service (CcWaydroidPanel *self)
   g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
-                     "UnmaskUnitFies",
-                     g_variant_new ("(asb)", &builder, TRUE),
+                     "UnmaskUnitFiles",
+                     g_variant_new ("(asb)", &builder, FALSE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
