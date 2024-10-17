@@ -1057,6 +1057,7 @@ waydroid_get_session_cb (GObject      *object,
   get_android_prop (self, "persist.waydroid.uevent");
   get_android_prop (self, "persist.waydroid.suspend");
   set_shared_folder_state (self);
+  set_notifications_state (self);
   check_available_apps (self);
 
   gtk_widget_set_sensitive (self->android_applications, TRUE);
