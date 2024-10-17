@@ -234,6 +234,8 @@ add_applications (gpointer user_data)
 
   add_application (first->data, data->self);
 
+  data->applications = g_list_remove (data->applications, first);
+
   if (g_list_length (data->applications) == 0) {
       g_list_free_full (data->applications, g_object_unref);
       g_free (data);
