@@ -242,7 +242,7 @@ add_applications (gpointer user_data)
 
   if (g_list_length (data->applications) != 0 && !g_cancellable_is_cancelled (data->self->cancellable)) {
     g_idle_add ((GSourceFunc) add_applications, data);
-    return;
+    return FALSE;
   }
 
 out:
