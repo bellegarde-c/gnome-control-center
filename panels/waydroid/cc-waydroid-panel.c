@@ -74,6 +74,11 @@ struct _CcWaydroidPanel {
 
 G_DEFINE_TYPE (CcWaydroidPanel, cc_waydroid_panel, CC_TYPE_PANEL)
 
+struct MaskServiceParams {
+  CcWaydroidPanel *self;
+  const char *action;
+}
+
 static void
 waydroid_resolved_cb (GObject      *object,
                       GAsyncResult *res,
@@ -104,10 +109,22 @@ mask_service_cb  (GObject      *object,
                   GAsyncResult *res,
                   gpointer      user_data);
 static void
-unmask_service_cb (GObject      *object,
-                   GAsyncResult *res,
-                   gpointer      user_data);
+reload_service_cb  (GObject      *object,
+                    GAsyncResult *res,
+                    gpointer      user_data);
 
+static void
+reload_service (gpointer user_data)
+{
+  g_dbus_proxy_call (self->systemd_proxy,
+                     "Reload",
+                     g_variant_new ("(&s&s)", service, "replace"),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     self->cancellable,
+                     reload_service_cb,
+                     user_data);
+}
 
 static void
 start_service (CcWaydroidPanel *self,
@@ -138,39 +155,30 @@ stop_service (CcWaydroidPanel *self,
 }
 
 static void
-mask_notifications_service (CcWaydroidPanel *self)
+mask_notifications_service (CcWaydroidPanel *self,
+                            gboolean         mask)
 {
   GVariantBuilder builder;
+  struct MaskServiceParams *mask_service_params = g_new0 (struct MaskServiceParams, 1);
+
+  mask_service_params->self = self;
+  if (mask)
+    mask_service_params->action = "MaskUnitFiles";
+  else
+    mask_service_params->action = "UnmaskUnitFiles";
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
   g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
-                     "MaskUnitFiles",
-                     g_variant_new ("(asbb)", &builder, FALSE, FALSE),
+                     mask_service_params->action,
+                     mask ? g_variant_new ("(asbb)", &builder, FALSE, FALSE) :
+                            g_variant_new ("(asb)", &builder, FALSE) :
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
                      mask_service_cb,
-                     self);
-}
-
-static void
-unmask_notifications_service (CcWaydroidPanel *self)
-{
-  GVariantBuilder builder;
-
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-  g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
-
-  g_dbus_proxy_call (self->systemd_proxy,
-                     "UnmaskUnitFiles",
-                     g_variant_new ("(asb)", &builder, FALSE),
-                     G_DBUS_CALL_FLAGS_NONE,
-                     -1,
-                     self->cancellable,
-                     unmask_service_cb,
-                     self);
+                     mask_service_params);
 }
 
 static int
@@ -366,18 +374,21 @@ mask_service_cb (GObject      *object,
 
   if (error != NULL) {
     g_warning (error->message);
+    g_free (user_data);
   } else {
-    stop_service (self, "waydroid-notification-client.service");
+    reload_service (user_data);
   }
 }
 
 static void
-unmask_service_cb (GObject      *object,
+reload_service_cb (GObject      *object,
                    GAsyncResult *res,
                    gpointer      user_data)
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
   CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
+  Struct MaskServiceParams *mask_service_params = user_data;
+
   g_autoptr (GVariant) result = NULL;
   g_autoptr (GError) error = NULL;
 
@@ -385,9 +396,13 @@ unmask_service_cb (GObject      *object,
 
   if (error != NULL) {
     g_warning (error->message);
+  } else if (g_strcmp0 (mask_service_params->action, "MaskUnitFiles") == 0) {
+    stop_service (mask_service_params->self, "waydroid-notification-client.service");
   } else {
-    stop_service (self, "waydroid-notification-client.service");
+    start_service (mask_service_params->self, "waydroid-notification-client.service");
   }
+
+  g_free (user_data);
 }
 
 static void
@@ -992,10 +1007,7 @@ setting_notifications_active_cb (CcWaydroidPanel *self)
 {
   gboolean active = gtk_switch_get_active (GTK_SWITCH (self->setting_notifications_switch));
 
-  if (active)
-    unmask_notifications_service (self);
-  else
-    mask_notifications_service (self);
+  mask_notifications_service (self, !active);
 }
 
 static void
