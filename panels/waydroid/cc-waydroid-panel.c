@@ -236,8 +236,7 @@ add_applications (gpointer user_data)
 
   data->applications = g_list_remove_link (data->applications, first);
 
-  g_warning (">>>> %d", g_list_length (data->applications));
-  if (g_list_length (data->applications) == 0) {
+  if (g_list_length (data->applications) == 0 || g_cancellable_is_cancelled (data->self->cancellable)) {
       g_list_free_full (data->applications, g_object_unref);
       g_free (data);
   } else {
