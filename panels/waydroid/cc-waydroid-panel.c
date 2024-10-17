@@ -79,6 +79,11 @@ struct MaskServiceParams {
   const char *action;
 };
 
+struct ApplicationsData {
+  CcWaydroidPanel *self;
+  GList *applications;
+};
+
 static void
 waydroid_resolved_cb (GObject      *object,
                       GAsyncResult *res,
@@ -215,18 +220,39 @@ add_application (GDesktopAppInfo *app_info, gpointer user_data)
 
   if (!exists) {
     self->application_rows = g_list_append (self->application_rows, new_row);
-    g_idle_add (adw_preferences_group_add ,ADW_PREFERENCES_GROUP (self->android_applications),
+    adw_preferences_group_add (ADW_PREFERENCES_GROUP (self->android_applications),
                                new_row);
     g_signal_connect (new_row, "app-removed", G_CALLBACK (app_removed_cb), self);
   }
+}
+
+static gboolean
+add_applications (gpointer user_data)
+{
+  struct ApplicationsData *data = user_data;
+  GList *first = g_list_first (data->applications);
+
+  add_application (first, data->self);
+
+  if (g_list_length (data->applications) == 0 {
+      g_list_free_full (data->applications, g_object_unref);
+      g_free (data);
+  } else {
+    g_idle_add ((GSourceFunc) add_applications, data);
+  }
+
+  return FALSE;
 }
 
 static void
 check_available_apps (CcWaydroidPanel *self)
 {
   gchar ***apps = g_desktop_app_info_search ("waydroid");
-  GList *to_sort = NULL;
+  struct ApplicationsData *data = g_new0 (struct ApplicationsData, 1);
   unsigned int i = 0;
+
+  data->self = self;
+  data->applications = NULL;
 
   while (apps[i] != NULL) {
     for (unsigned int h = 0; h < g_strv_length (apps[i]); h++) {
@@ -242,16 +268,16 @@ check_available_apps (CcWaydroidPanel *self)
         continue;
 
       if (g_strrstr (exec, "waydroid app launch ") != NULL) {
-        to_sort = g_list_insert_sorted (to_sort, app_info, sort_applications);
+        data->applications = g_list_insert_sorted (data->applications,
+                                                   app_info,
+                                                   sort_applications);
       }
     }
     g_strfreev (apps[i]);
     i += 1;
   }
 
-
-  g_list_foreach (to_sort, (GFunc) add_application, self);
-  g_list_free_full (to_sort, g_object_unref);
+  g_idle_add ((GSourceFunc) add_applications, data);
 
   g_free (apps);
 }
