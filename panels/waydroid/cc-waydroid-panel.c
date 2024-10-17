@@ -1111,6 +1111,8 @@ cc_waydroid_panel_class_init (CcWaydroidPanelClass *klass)
   gtk_widget_class_bind_template_callback (widget_class,
                                            setting_shared_folder_active_cb);
   gtk_widget_class_bind_template_callback (widget_class,
+                                           setting_notifications_active_cb);
+  gtk_widget_class_bind_template_callback (widget_class,
                                            clear_data_button_clicked_cb);
 }
 
