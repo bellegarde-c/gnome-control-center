@@ -96,33 +96,44 @@ static void
 app_removed_cb (CcAppRow *row,
                 gpointer  user_data);
 static void
-systemd_cb (GObject      *object,
-            GAsyncResult *res,
-            gpointer      user_data);
+start_stop_service_cb (GObject      *object,
+                       GAsyncResult *res,
+                       gpointer      user_data);
+static void
+mask_service_cb  (GObject      *object,
+                  GAsyncResult *res,
+                  gpointer      user_data);
+static void
+unmask_service_cb (GObject      *object,
+                   GAsyncResult *res,
+                   gpointer      user_data);
+
 
 static void
-enable_shared_folder (CcWaydroidPanel *self)
+start_service (CcWaydroidPanel *self,
+               const char      *service)
 {
   g_dbus_proxy_call (self->systemd_proxy,
                      "StartUnit",
-                     g_variant_new ("(&s&s)", "waydroid-mount-shared-folders.service", "replace"),
+                     g_variant_new ("(&s&s)", service, "replace"),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     systemd_cb,
+                     start_stop_service_cb,
                      self);
 }
 
 static void
-disable_shared_folder (CcWaydroidPanel *self)
+stop_service (CcWaydroidPanel *self,
+              const char      *service)
 {
   g_dbus_proxy_call (self->systemd_proxy,
                      "StopUnit",
-                     g_variant_new ("(&s&s)", "waydroid-mount-shared-folders.service", "replace"),
+                     g_variant_new ("(&s&s)", service, "replace"),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     systemd_cb,
+                     start_stop_service_cb,
                      self);
 }
 
@@ -140,7 +151,7 @@ mask_notifications_service (CcWaydroidPanel *self)
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     systemd_cb,
+                     mask_service_cb,
                      self);
 }
 
@@ -158,7 +169,7 @@ unmask_notifications_service (CcWaydroidPanel *self)
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     systemd_cb,
+                     unmask_service_cb,
                      self);
 }
 
@@ -326,9 +337,9 @@ remove_rows (CcWaydroidPanel *self,
 }
 
 static void
-systemd_cb (GObject      *object,
-            GAsyncResult *res,
-            gpointer      user_data)
+start_stop_service_cb (GObject      *object,
+               GAsyncResult *res,
+               gpointer      user_data)
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
   g_autoptr (GVariant) result = NULL;
@@ -338,6 +349,44 @@ systemd_cb (GObject      *object,
 
   if (error != NULL) {
     g_warning (error->message);
+  }
+}
+
+static void
+mask_service_cb (GObject      *object,
+                 GAsyncResult *res,
+                 gpointer      user_data)
+{
+  GDBusProxy *proxy = G_DBUS_PROXY (object);
+  CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
+  g_autoptr (GVariant) result = NULL;
+  g_autoptr (GError) error = NULL;
+
+  result = g_dbus_proxy_call_finish (proxy, res, &error);
+
+  if (error != NULL) {
+    g_warning (error->message);
+  } else {
+    stop_service (self, "waydroid-notification-client.service");
+  }
+}
+
+static void
+unmask_service_cb (GObject      *object,
+                   GAsyncResult *res,
+                   gpointer      user_data)
+{
+  GDBusProxy *proxy = G_DBUS_PROXY (object);
+  CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
+  g_autoptr (GVariant) result = NULL;
+  g_autoptr (GError) error = NULL;
+
+  result = g_dbus_proxy_call_finish (proxy, res, &error);
+
+  if (error != NULL) {
+    g_warning (error->message);
+  } else {
+    stop_service (self, "waydroid-notification-client.service");
   }
 }
 
@@ -927,10 +976,10 @@ setting_shared_folder_active_cb (CcWaydroidPanel *self)
                               G_FILE_CREATE_PRIVATE,
                               self->cancellable,
                               &error);
-      enable_shared_folder (self);
+      start_service (self, "waydroid-mount-shared-folders.service");
     }
   } else {
-    disable_shared_folder (self);
+    stop_service (self, "waydroid-mount-shared-folders.service");
     g_file_delete (file, self->cancellable, &error);
   }
 
