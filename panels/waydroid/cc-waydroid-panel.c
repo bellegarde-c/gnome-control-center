@@ -215,7 +215,7 @@ add_application (GDesktopAppInfo *app_info, gpointer user_data)
 
   if (!exists) {
     self->application_rows = g_list_append (self->application_rows, new_row);
-    adw_preferences_group_add (ADW_PREFERENCES_GROUP (self->android_applications),
+    g_idle_add (adw_preferences_group_add ,ADW_PREFERENCES_GROUP (self->android_applications),
                                new_row);
     g_signal_connect (new_row, "app-removed", G_CALLBACK (app_removed_cb), self);
   }
