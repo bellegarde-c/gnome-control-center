@@ -116,6 +116,8 @@ reload_service_cb  (GObject      *object,
 static void
 reload_service (gpointer user_data)
 {
+  struct MaskServiceParams *mask_service_params = user_data;
+
   g_dbus_proxy_call (self->systemd_proxy,
                      "Reload",
                      g_variant_new ("(&s&s)", service, "replace"),
