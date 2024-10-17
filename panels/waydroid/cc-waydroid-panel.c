@@ -307,7 +307,6 @@ handle_waydroid_package (CcWaydroidPanel *self,
 
     if ((info & PK_INFO_ENUM_INSTALLED) == PK_INFO_ENUM_INSTALLED) {
       gtk_widget_set_sensitive (self->enable_waydroid_switch, TRUE);
-      check_available_apps (self);
       gtk_stack_set_visible_child_name (GTK_STACK (self->stack), "configure");
     } else {
       gtk_widget_set_name (self->install_waydroid_button,
