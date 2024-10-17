@@ -232,7 +232,7 @@ add_applications (gpointer user_data)
   struct ApplicationsData *data = user_data;
   GList *first = g_list_first (data->applications);
 
-  add_application (first, data->self);
+  add_application (first->data, data->self);
 
   if (g_list_length (data->applications) == 0) {
       g_list_free_full (data->applications, g_object_unref);
