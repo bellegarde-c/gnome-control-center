@@ -368,7 +368,6 @@ mask_service_cb (GObject      *object,
                  gpointer      user_data)
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
-  CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
   g_autoptr (GVariant) result = NULL;
   g_autoptr (GError) error = NULL;
 
@@ -388,7 +387,6 @@ reload_service_cb (GObject      *object,
                    gpointer      user_data)
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
-  CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
   struct MaskServiceParams *mask_service_params = user_data;
 
   g_autoptr (GVariant) result = NULL;
