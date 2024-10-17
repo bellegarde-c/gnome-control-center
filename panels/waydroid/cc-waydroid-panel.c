@@ -77,7 +77,7 @@ G_DEFINE_TYPE (CcWaydroidPanel, cc_waydroid_panel, CC_TYPE_PANEL)
 struct MaskServiceParams {
   CcWaydroidPanel *self;
   const char *action;
-}
+};
 
 static void
 waydroid_resolved_cb (GObject      *object,
@@ -387,7 +387,7 @@ reload_service_cb (GObject      *object,
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
   CcWaydroidPanel *self = CC_WAYDROID_PANEL (user_data);
-  Struct MaskServiceParams *mask_service_params = user_data;
+  struct MaskServiceParams *mask_service_params = user_data;
 
   g_autoptr (GVariant) result = NULL;
   g_autoptr (GError) error = NULL;
