@@ -96,9 +96,9 @@ static void
 app_removed_cb (CcAppRow *row,
                 gpointer  user_data);
 static void
-shared_folder_cb (GObject      *object,
-                  GAsyncResult *res,
-                  gpointer      user_data);
+systemd_cb (GObject      *object,
+            GAsyncResult *res,
+            gpointer      user_data);
 
 static void
 enable_shared_folder (CcWaydroidPanel *self)
@@ -109,7 +109,7 @@ enable_shared_folder (CcWaydroidPanel *self)
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     shared_folder_cb,
+                     systemd_cb,
                      self);
 }
 
@@ -122,23 +122,45 @@ disable_shared_folder (CcWaydroidPanel *self)
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     shared_folder_cb,
+                     systemd_cb,
                      self);
 }
 
 static void
-mask_notifications_service (CcWaydroidPanel *self, gboolean mask)
+mask_notifications_service (CcWaydroidPanel *self)
 {
   const char *action = mask ? "DisableUnitFiles" : "EnableUnitFiles";
-  g_autoptr (GVariant) args = g_variant_new_parsed("[waydroid-notification-client.service]");
+  GVariantBuilder builder;
+
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+  g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
 
   g_dbus_proxy_call (self->systemd_proxy,
                      action,
-                     args,
+                     g_variant_new ("(asbb)", &builder, FALSE, TRUE),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      self->cancellable,
-                     NULL, //mask_notifications_cb,
+                     systemd_cb,
+                     self);
+}
+
+static void
+unmask_notifications_service (CcWaydroidPanel *self)
+{
+  const char *action = mask ? "DisableUnitFiles" : "EnableUnitFiles";
+  GVariantBuilder builder;
+
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+  g_variant_builder_add(&builder, "s", "waydroid-notification-client.service");
+
+  g_dbus_proxy_call (self->systemd_proxy,
+                     action,
+                     g_variant_new ("(asb)", &builder, TRUE),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     self->cancellable,
+                     systemd_cb,
                      self);
 }
 
@@ -306,9 +328,9 @@ remove_rows (CcWaydroidPanel *self,
 }
 
 static void
-shared_folder_cb (GObject      *object,
-                  GAsyncResult *res,
-                  gpointer      user_data)
+systemd_cb (GObject      *object,
+            GAsyncResult *res,
+            gpointer      user_data)
 {
   GDBusProxy *proxy = G_DBUS_PROXY (object);
   g_autoptr (GVariant) result = NULL;
@@ -317,7 +339,7 @@ shared_folder_cb (GObject      *object,
   result = g_dbus_proxy_call_finish (proxy, res, &error);
 
   if (error != NULL) {
-    g_warning ("Can't manage Waydroid state: %s", error->message);
+    g_warning (error->message);
   }
 }
 
@@ -923,7 +945,10 @@ setting_notifications_active_cb (CcWaydroidPanel *self)
 {
   gboolean active = gtk_switch_get_active (GTK_SWITCH (self->setting_notifications_switch));
 
-  mask_notifications_service (self, !active);
+  if (active)
+    unmask_notifications_service (self);
+  else
+    mask_notifications_service (self);
 }
 
 static void
