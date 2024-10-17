@@ -232,7 +232,7 @@ add_applications (gpointer user_data)
   struct ApplicationsData *data = user_data;
   GList *first = g_list_first (data->applications);
 
-  if (data->self->cancellable != NULL) {
+  if (data->self->cancellable == NULL) {
     goto out;
   }
 
