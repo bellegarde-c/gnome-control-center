@@ -59,6 +59,7 @@ struct _CcWaydroidPanel {
   GtkWidget        *setting_uevent_switch;
   GtkWidget        *setting_suspend_switch;
   GtkWidget        *setting_shared_folder_switch;
+  GtkWidget        *setting_notifications_switch;
   GtkWidget        *android_applications;
 
   GList            *application_rows;
@@ -87,6 +88,8 @@ static void
 setting_suspend_active_cb (CcWaydroidPanel *self);
 static void
 setting_shared_folder_active_cb (CcWaydroidPanel *self);
+static void
+setting_notifications_active_cb (CcWaydroidPanel *self);
 static void
 enable_waydroid_active_cb (CcWaydroidPanel *self);
 static void
@@ -120,6 +123,22 @@ disable_shared_folder (CcWaydroidPanel *self)
                      -1,
                      self->cancellable,
                      shared_folder_cb,
+                     self);
+}
+
+static void
+mask_notifications_service (CcWaydroidPanel *self, gboolean mask)
+{
+  const char *action = mask ? "DisableUnitFiles" : "EnableUnitFiles";
+  g_autoptr (GVariant) args = g_variant_new_parsed("[waydroid-notification-client.service]");
+
+  g_dbus_proxy_call (self->systemd_proxy,
+                     action,
+                     args,
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     self->cancellable,
+                     NULL, //mask_notifications_cb,
                      self);
 }
 
@@ -597,6 +616,26 @@ set_shared_folder_state (CcWaydroidPanel *self)
 }
 
 static void
+set_notifications_state (CcWaydroidPanel *self)
+{
+  g_autofree char *filename = g_build_filename (g_get_user_config_dir (),
+                                                "systemd",
+                                                "user",
+                                                "waydroid-notification_client.service",
+                                                NULL);
+  g_autoptr (GFile) file = g_file_new_for_path (filename);
+  gboolean active = g_file_query_exists (file, self->cancellable);
+
+  g_signal_handlers_block_by_func(self->setting_shared_folder_switch,
+                                  setting_notifications_active_cb,
+                                  self);
+  gtk_switch_set_active (GTK_SWITCH (self->setting_notifications_switch), active);
+  g_signal_handlers_unblock_by_func(self->setting_shared_folder_switch,
+                                    setting_notifications_active_cb,
+                                    self);
+}
+
+static void
 app_removed_cb (CcAppRow *row,
                 gpointer  user_data)
 {
@@ -880,6 +919,14 @@ setting_shared_folder_active_cb (CcWaydroidPanel *self)
 }
 
 static void
+setting_notifications_active_cb (CcWaydroidPanel *self)
+{
+  gboolean active = gtk_switch_get_active (GTK_SWITCH (self->setting_notifications_switch));
+
+  mask_notifications_service (self, !active);
+}
+
+static void
 waydroid_bus_cb (GObject  *object,
                  GAsyncResult* res,
                  gpointer  user_data)
@@ -1037,6 +1084,9 @@ cc_waydroid_panel_class_init (CcWaydroidPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class,
                                         CcWaydroidPanel,
                                         setting_shared_folder_switch);
+  gtk_widget_class_bind_template_child (widget_class,
+                                        CcWaydroidPanel,
+                                        setting_notifications_switch);
   gtk_widget_class_bind_template_child (widget_class,
                                         CcWaydroidPanel,
                                         setting_suspend_switch);

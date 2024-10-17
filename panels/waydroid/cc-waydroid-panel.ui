@@ -76,6 +76,19 @@
                                     </object>
                                   </child>
                                 </object>
+                              </child>
+                              <child>
+                                <object class="AdwActionRow" id="waydroid_setting_notifications">
+                                  <property name="activatable_widget">setting_notifications_switch</property>
+                                  <property name="title" translatable="yes">Forward notifications</property>
+                                  <property name="subtitle" translatable="yes">Show Android notificications</property>
+                                  <child type="suffix">
+                                    <object class="GtkSwitch" id="setting_notifications_switch">
+                                      <property name="valign">center</property>
+                                      <signal name="notify::active" handler="setting_notifications_active_cb" object="CcWaydroidPanel" swapped="yes"/>
+                                    </object>
+                                  </child>
+                                </object>
                              </child>
                           </object>
                         </child>
